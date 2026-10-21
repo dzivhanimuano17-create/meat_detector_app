@@ -1,1 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meat type detector</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+    button { padding: 0.5rem 1rem; font-size: 1rem; }
+    video, img { max-width: 100%; margin-top: 1rem; }
+    #message { min-height: 1.5em; }
+  </style>
+</head>
+<body>
+  <h1>Meat type detector</h1>
+  <p>Upload a short video or photo of raw meat. The model draws a box around each piece and names its type.</p>
 
+  <form id="form">
+    <input type="file" id="file" accept="video/*,image/*">
+    <button type="submit" id="go">Detect</button>
+  </form>
+  <p id="message">Maximum file size: {{ max_mb }} MB. Short clips (10 to 20 seconds) work best.</p>
+
+  <div id="result"></div>
+  <ul id="found"></ul>
+
+  <script>
+    const form = document.getElementById("form");
+    const fileInput = document.getElementById("file");
+    const button = document.getElementById("go");
+    const message = document.getElementById("message");
+    const result = document.getElementById("result");
+    const found = document.getElementById("found");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const file = fileInput.files[0];
+      if (!file) {
+        message.textContent = "Choose a video or photo first.";
+        return;
+      }
+
+      message.textContent = "Analysing, please wait...";
+      result.replaceChildren();
+      found.replaceChildren();
+      button.disabled = true;
+
+      const body = new FormData();
+      body.append("file", file);
+
+      try {
+        const response = await fetch("predict", { method: "POST", body });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Something went wrong.");
+        show(data);
+      } catch (err) {
+        message.textContent = err.message;
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    function show(data) {
+      let media;
+      if (data.kind === "video") {
+        media = document.createElement("video");
+        media.controls = true;
+        media.autoplay = true;
+        media.muted = true;
+        media.loop = true;
+        media.playsInline = true;
+      } else {
+        media = document.createElement("img");
+        media.alt = "Result with detected meat outlined";
+      }
+      media.src = data.url + "?t=" + Date.now();
+      result.appendChild(media);
+
+      if (data.summary.length === 0) {
+        message.textContent = "No meat detected. Try better light or move closer.";
+        return;
+      }
+
+      message.textContent = "Done in " + data.seconds + " seconds." + (data.truncated ? " Only the first part of the video was analysed." : "");
+      data.summary.forEach((row) => {
+        const item = document.createElement("li");
+        item.textContent = data.kind === "video"
+          ? row.label + ": seen in " + Math.round(row.share * 100) + "% of frames, average confidence " + Math.round(row.avg_conf * 100) + "%"
+          : row.label + ": confidence " + Math.round(row.max_conf * 100) + "%";
+        found.appendChild(item);
+      });
+    }
+  </script>
+</body>
+</html>
