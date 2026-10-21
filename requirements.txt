@@ -1,0 +1,6 @@
+# Web server
+flask>=3.0,<4
+gunicorn>=22
+
+# Model and video handling (same version as used for training)
+ultralytics==8.4.183
