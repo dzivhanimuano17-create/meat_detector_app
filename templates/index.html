@@ -3,381 +3,93 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
   <title>Meat type detector</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #eef2f1;
-      --card: #ffffff;
-      --ink: #14202a;
-      --muted: #55646d;
-      --line: #d3dcd9;
-      --soft: #f3f6f5;
-      --accent: #14202a;
-      --accent-ink: #ffffff;
-      --danger-bg: #fdeeed;
-      --danger: #c0392b;
-      --focus: #1f7ae0;
-      --beef: #c0392b;
-      --pork: #e8879f;
-      --chicken: #f4b400;
-      --lamb: #7e57c2;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0e161c;
-        --card: #16212a;
-        --ink: #eaf0f2;
-        --muted: #9aabb4;
-        --line: #2b3a45;
-        --soft: #1c2933;
-        --accent: #eaf0f2;
-        --accent-ink: #0e161c;
-        --danger-bg: #3a1f1d;
-        --danger: #ff8a7a;
-        --focus: #6cb0ff;
-      }
-    }
-
-    * { box-sizing: border-box; }
-    html { -webkit-text-size-adjust: 100%; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      line-height: 1.55;
-    }
-    .wrap { max-width: 1040px; margin: 0 auto; padding: 2.5rem 1.25rem 3rem; }
-
-    /* ---------- header ---------- */
-    header h1 {
-      margin: 0 0 0.85rem;
-      font-size: clamp(2.3rem, 7vw, 4rem);
-      line-height: 1;
-      font-weight: 800;
-      letter-spacing: -0.035em;
-    }
-    .stripe { display: flex; height: 10px; max-width: 360px; margin-bottom: 1.1rem; border-radius: 3px; overflow: hidden; }
-    .stripe span { flex: 1; }
-    .stripe span:nth-child(1) { background: var(--chicken); }
-    .stripe span:nth-child(2) { background: var(--beef); }
-    .stripe span:nth-child(3) { background: var(--pork); }
-    .stripe span:nth-child(4) { background: var(--lamb); }
-    header p { margin: 0; max-width: 54ch; color: var(--muted); font-size: 1.08rem; }
-
-    /* ---------- layout ---------- */
-    .grid {
-      display: grid;
-      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-      gap: 1.25rem;
-      margin-top: 2rem;
-      align-items: start;
-    }
-    @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 1.35rem;
-    }
-    .card h2 { margin: 0 0 1rem; font-size: 1.1rem; font-weight: 700; letter-spacing: -0.01em; }
-
-    /* ---------- upload ---------- */
-    .drop {
-      position: relative;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 0.3rem; text-align: center;
-      min-height: 170px; padding: 1.25rem;
-      border: 2px dashed var(--line);
-      border-radius: 12px;
-      background: var(--soft);
-      cursor: pointer;
-      transition: border-color 0.15s, background-color 0.15s;
-    }
-    .drop:hover, .drop.over { border-color: var(--ink); }
-    .drop:focus-within { outline: 3px solid var(--focus); outline-offset: 3px; }
-    .drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-    .drop svg { width: 38px; height: 38px; color: var(--muted); margin-bottom: 0.2rem; }
-    .drop strong { font-size: 1.05rem; }
-    .drop small { color: var(--muted); }
-
-    .preview { margin-top: 0.9rem; }
-    .preview video, .preview img {
-      display: block; width: 100%; max-height: 220px; object-fit: contain;
-      border-radius: 10px; background: #0b1217;
-    }
-    .picked { margin: 0.6rem 0 0; font-size: 0.95rem; color: var(--muted); overflow-wrap: anywhere; min-height: 1.4em; }
-
-    button {
-      font: inherit; font-weight: 700;
-      width: 100%; margin-top: 0.9rem; padding: 0.85rem 1rem;
-      border: 0; border-radius: 10px;
-      background: var(--accent); color: var(--accent-ink);
-      cursor: pointer;
-      transition: opacity 0.15s, transform 0.1s;
-    }
-    button:hover:not(:disabled) { opacity: 0.88; }
-    button:active:not(:disabled) { transform: translateY(1px); }
-    button:disabled { opacity: 0.4; cursor: not-allowed; }
-    button:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
-
-    .legend { list-style: none; margin: 1.3rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
-    .legend li {
-      display: inline-flex; align-items: center; gap: 0.45rem;
-      padding: 0.25rem 0.7rem 0.25rem 0.55rem;
-      border: 1px solid var(--line); border-radius: 999px;
-      font-size: 0.92rem; text-transform: capitalize;
-    }
-    .swatch { width: 12px; height: 12px; border-radius: 50%; flex: none; }
-
-    /* ---------- result ---------- */
-    .empty { margin: 0; color: var(--muted); max-width: 44ch; }
-    .busy { display: none; align-items: center; gap: 0.8rem; font-weight: 500; }
-    .busy.on { display: flex; }
-    .spinner {
-      width: 22px; height: 22px; flex: none;
-      border: 3px solid var(--line); border-top-color: var(--ink);
-      border-radius: 50%; animation: spin 0.9s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @media (prefers-reduced-motion: reduce) {
-      .spinner { animation-duration: 3s; }
-      * { transition: none !important; }
-    }
-
-    .error {
-      display: none; margin: 0 0 1rem; padding: 0.8rem 1rem;
-      border-left: 5px solid var(--danger); background: var(--danger-bg); border-radius: 6px;
-    }
-    .error.on { display: block; }
-
-    #output { display: none; }
-    #output.on { display: block; }
-    #media video, #media img {
-      display: block; width: 100%; max-height: 520px; object-fit: contain;
-      border-radius: 10px; background: #0b1217;
-    }
-    .verdict { margin: 1.1rem 0 0.15rem; font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; text-transform: capitalize; }
-    .meta { margin: 0 0 1rem; color: var(--muted); font-size: 0.95rem; }
-
-    .found { list-style: none; margin: 0; padding: 0; }
-    .found li { display: grid; grid-template-columns: 8px 1fr; gap: 0.85rem; padding: 0.7rem 0; border-top: 1px solid var(--line); }
-    .found .bar { border-radius: 4px; }
-    .found .name { font-weight: 700; text-transform: capitalize; }
-    .found .detail { color: var(--muted); font-size: 0.92rem; }
-    .meter { height: 6px; margin-top: 0.45rem; border-radius: 3px; background: var(--soft); overflow: hidden; }
-    .meter span { display: block; height: 100%; border-radius: 3px; }
-
-    footer { margin-top: 2.2rem; color: var(--muted); font-size: 0.9rem; }
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+    button { padding: 0.5rem 1rem; font-size: 1rem; }
+    video, img { max-width: 100%; margin-top: 1rem; }
+    #message { min-height: 1.5em; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>What meat is this?</h1>
-      <div class="stripe" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-      <p>Upload a short video or photo of raw meat. The model draws a box around each piece and names its type.</p>
-    </header>
+  <h1>Meat type detector</h1>
+  <p>Upload a short video or photo of raw meat. The model draws a box around each piece and names its type.</p>
 
-    <main class="grid">
-      <section class="card" aria-labelledby="upload-title">
-        <h2 id="upload-title">Your file</h2>
-        <form id="form">
-          <label class="drop" id="drop">
-            <input type="file" id="file" accept="video/*,image/*">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>
-            </svg>
-            <strong>Choose a video or photo</strong>
-            <small>or drop it here. Up to {{ max_mb }} MB.</small>
-          </label>
-          <div class="preview" id="preview"></div>
-          <p class="picked" id="picked" aria-live="polite"></p>
-          <button type="submit" id="go" disabled>Detect meat</button>
-        </form>
-        <ul class="legend" id="legend" aria-label="Types the model can recognise"></ul>
-      </section>
+  <form id="form">
+    <input type="file" id="file" accept="video/*,image/*">
+    <button type="submit" id="go">Detect</button>
+  </form>
+  <p id="message">Maximum file size: {{ max_mb }} MB. Short clips (10 to 20 seconds) work best.</p>
 
-      <section class="card" aria-labelledby="result-title" aria-live="polite">
-        <h2 id="result-title">Result</h2>
-        <p class="error" id="error" role="alert"></p>
-        <p class="empty" id="empty">Your annotated video or photo will appear here. Clips of 10 to 20 seconds finish fastest, and good light with a clear view of each piece gives the best results.</p>
-        <div class="busy" id="busy"><div class="spinner" aria-hidden="true"></div><span id="busy-text">Analysing…</span></div>
-        <div id="output">
-          <div id="media"></div>
-          <p class="verdict" id="verdict"></p>
-          <p class="meta" id="meta"></p>
-          <ul class="found" id="found"></ul>
-        </div>
-      </section>
-    </main>
-
-    <footer>Built with YOLOv8n and Flask for the CES117V capstone project.</footer>
-  </div>
+  <div id="result"></div>
+  <ul id="found"></ul>
 
   <script>
-    const $ = (id) => document.getElementById(id);
-    const fileInput = $("file"), drop = $("drop"), go = $("go");
-    let COLORS = {};
-    let previewUrl = null;
-    let timer = null;
+    const form = document.getElementById("form");
+    const fileInput = document.getElementById("file");
+    const button = document.getElementById("go");
+    const message = document.getElementById("message");
+    const result = document.getElementById("result");
+    const found = document.getElementById("found");
 
-    // Build the colour key from the types the loaded model actually knows.
-    fetch("health").then((r) => r.json()).then((info) => {
-      info.classes.forEach((c) => {
-        COLORS[c.name.toLowerCase()] = c.color;
-        const li = document.createElement("li");
-        const swatch = document.createElement("span");
-        swatch.className = "swatch";
-        swatch.style.background = c.color;
-        const label = document.createElement("span");
-        label.textContent = c.name;
-        li.append(swatch, label);
-        $("legend").appendChild(li);
-      });
-    }).catch(() => {});
-
-    function sizeText(bytes) {
-      return bytes > 1048576 ? (bytes / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(bytes / 1024)) + " KB";
-    }
-
-    function setFile(file) {
-      if (previewUrl) { URL.revokeObjectURL(previewUrl); previewUrl = null; }
-      $("preview").replaceChildren();
-      if (!file) { $("picked").textContent = ""; go.disabled = true; return; }
-
-      $("picked").textContent = file.name + " (" + sizeText(file.size) + ")";
-      go.disabled = false;
-
-      previewUrl = URL.createObjectURL(file);
-      let el;
-      if (file.type.startsWith("video/")) {
-        el = document.createElement("video");
-        el.controls = true; el.muted = true; el.playsInline = true; el.preload = "metadata";
-      } else {
-        el = document.createElement("img");
-        el.alt = "Preview of the chosen photo";
-      }
-      el.src = previewUrl;
-      $("preview").appendChild(el);
-    }
-
-    fileInput.addEventListener("change", () => setFile(fileInput.files[0]));
-    ["dragenter", "dragover"].forEach((evt) => drop.addEventListener(evt, (e) => { e.preventDefault(); drop.classList.add("over"); }));
-    ["dragleave", "drop"].forEach((evt) => drop.addEventListener(evt, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
-    drop.addEventListener("drop", (e) => {
-      if (e.dataTransfer.files.length) { fileInput.files = e.dataTransfer.files; setFile(fileInput.files[0]); }
-    });
-
-    function showError(message) {
-      const box = $("error");
-      box.textContent = message;
-      box.classList.add("on");
-    }
-
-    function setBusy(on) {
-      $("busy").classList.toggle("on", on);
-      go.disabled = on || !fileInput.files[0];
-      go.textContent = on ? "Analysing…" : "Detect meat";
-      clearInterval(timer);
-      if (on) {
-        const started = Date.now();
-        $("busy-text").textContent = "Analysing…";
-        timer = setInterval(() => {
-          $("busy-text").textContent = "Analysing… " + Math.round((Date.now() - started) / 1000) + " s";
-        }, 1000);
-      }
-    }
-
-    function render(data) {
-      const media = $("media");
-      media.replaceChildren();
-      let el;
-      if (data.kind === "video") {
-        el = document.createElement("video");
-        el.controls = true; el.autoplay = true; el.muted = true; el.loop = true; el.playsInline = true;
-      } else {
-        el = document.createElement("img");
-        el.alt = "Photo with the detected meat outlined and labelled";
-      }
-      el.src = data.url + "?t=" + Date.now();
-      media.appendChild(el);
-
-      const list = $("found");
-      list.replaceChildren();
-
-      if (!data.summary.length) {
-        $("verdict").textContent = "No meat detected";
-        $("meta").textContent = "Try more light, move closer, or keep each piece clear of the others.";
-      } else {
-        const top = data.summary[0];
-        $("verdict").textContent = data.summary.length === 1 ? "Looks like " + top.label : "Mostly " + top.label;
-        const unit = data.kind === "video" ? data.frames_analysed + " frames" : "1 photo";
-        let meta = "Checked " + unit + " in " + data.seconds + " s.";
-        if (data.truncated) meta += " Only the first part of the video was analysed.";
-        $("meta").textContent = meta;
-
-        data.summary.forEach((row) => {
-          const color = COLORS[row.label.toLowerCase()] || "#5b6b73";
-          const li = document.createElement("li");
-
-          const bar = document.createElement("div");
-          bar.className = "bar";
-          bar.style.background = color;
-
-          const body = document.createElement("div");
-          const name = document.createElement("div");
-          name.className = "name";
-          name.textContent = row.label;
-          const detail = document.createElement("div");
-          detail.className = "detail";
-          detail.textContent = data.kind === "video"
-            ? "Seen in " + Math.round(row.share * 100) + "% of frames, average confidence " + Math.round(row.avg_conf * 100) + "%"
-            : "Confidence " + Math.round(row.max_conf * 100) + "%";
-          const meter = document.createElement("div");
-          meter.className = "meter";
-          const fill = document.createElement("span");
-          fill.style.width = Math.round(row.avg_conf * 100) + "%";
-          fill.style.background = color;
-          meter.appendChild(fill);
-
-          body.append(name, detail, meter);
-          li.append(bar, body);
-          list.appendChild(li);
-        });
-      }
-      $("output").classList.add("on");
-    }
-
-    $("form").addEventListener("submit", async (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const file = fileInput.files[0];
-      if (!file) return;
+      if (!file) {
+        message.textContent = "Choose a video or photo first.";
+        return;
+      }
 
-      $("error").classList.remove("on");
-      $("output").classList.remove("on");
-      $("empty").style.display = "none";
-      setBusy(true);
+      message.textContent = "Analysing, please wait...";
+      result.replaceChildren();
+      found.replaceChildren();
+      button.disabled = true;
 
       const body = new FormData();
       body.append("file", file);
+
       try {
         const response = await fetch("predict", { method: "POST", body });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "The server could not analyse that file.");
-        render(data);
+        if (!response.ok) throw new Error(data.error || "Something went wrong.");
+        show(data);
       } catch (err) {
-        showError(err.message || "Could not reach the server. Check your connection and try again.");
-        $("empty").style.display = "";
+        message.textContent = err.message;
       } finally {
-        setBusy(false);
+        button.disabled = false;
       }
     });
+
+    function show(data) {
+      let media;
+      if (data.kind === "video") {
+        media = document.createElement("video");
+        media.controls = true;
+        media.autoplay = true;
+        media.muted = true;
+        media.loop = true;
+        media.playsInline = true;
+      } else {
+        media = document.createElement("img");
+        media.alt = "Result with detected meat outlined";
+      }
+      media.src = data.url + "?t=" + Date.now();
+      result.appendChild(media);
+
+      if (data.summary.length === 0) {
+        message.textContent = "No meat detected. Try better light or move closer.";
+        return;
+      }
+
+      message.textContent = "Done in " + data.seconds + " seconds." + (data.truncated ? " Only the first part of the video was analysed." : "");
+      data.summary.forEach((row) => {
+        const item = document.createElement("li");
+        item.textContent = data.kind === "video"
+          ? row.label + ": seen in " + Math.round(row.share * 100) + "% of frames, average confidence " + Math.round(row.avg_conf * 100) + "%"
+          : row.label + ": confidence " + Math.round(row.max_conf * 100) + "%";
+        found.appendChild(item);
+      });
+    }
   </script>
 </body>
 </html>
