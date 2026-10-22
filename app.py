@@ -32,7 +32,7 @@ UPLOAD_DIR = WORK_DIR / "uploads"
 OUTPUT_DIR = WORK_DIR / "outputs"
 
 CONF_THRESHOLD = float(os.environ.get("CONF_THRESHOLD", 0.35))  # ignore weaker detections
-IMG_SIZE = int(os.environ.get("IMG_SIZE", 640))                 # MUST match the image size used in training
+IMG_SIZE = int(os.environ.get("IMG_SIZE", 416))                 # MUST match the image size used in training
 TARGET_FPS = 10        # frames analysed per second of video (keeps CPU hosting fast)
 MAX_FRAMES = 300       # about 30 seconds of video at TARGET_FPS
 MAX_SIDE = 960         # longest side of the output, in pixels
